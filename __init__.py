@@ -1,10 +1,22 @@
 from sys import path
-from os.path import dirname
+from os.path import dirname, exists, join
+from os import mkdir
+
+from folder_paths import models_dir
 
 path.append(dirname(__file__))
 
 print(" Image Caption ComfyUI Node ".center(100, "-"))
 
+models_folder_path = join(models_dir, "image_captioners")
+
+if exists(models_folder_path) is False:
+    mkdir(models_folder_path)
+    print(
+        f"/_\ {models_folder_path} is created. Please put your model folders under this folder"
+    )
+
+print("/_\ Loading Image Caption")
 from image_caption import ImageCaptionNode
 
 NODE_CLASS_MAPPINGS = {
