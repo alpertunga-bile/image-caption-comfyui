@@ -6,6 +6,8 @@
   - [Pretrained Image Caption Models](#pretrained-image-caption-models)
     - [Models](#models)
   - [Variables](#variables)
+    - [Image Caption Node](#image-caption-node)
+    - [Insert Prompt Node](#insert-prompt-node)
   - [Troubleshooting](#troubleshooting)
   - [Contributing](#contributing)
   - [Example Output](#example-output)
@@ -45,6 +47,8 @@ Image caption node for ComfyUI. You can load your image caption model and genera
 
 ## Variables
 
+### Image Caption Node
+
 |     Variable Names     | Definitions                                                                             |
 | :--------------------: | :-------------------------------------------------------------------------------------- |
 |     **model_name**     | Folder name that contains the model                                                     |
@@ -55,6 +59,15 @@ Image caption node for ComfyUI. You can load your image caption model and genera
 
 - For more information, follow [this link](https://huggingface.co/docs/transformers/v4.31.0/en/main_classes/text_generation#transformers.GenerationConfig).
 - Check [this link](https://huggingface.co/docs/transformers/v4.31.0/en/generation_strategies#text-generation-strategies) for text generation strategies.
+
+### Insert Prompt Node
+
+| Variable Names | Definitions                                                                                                                                                                                                                |
+| :------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| prompt_string  | Want to be inserted prompt. It is replaced with ```{prompt_string}``` part in the prompt_format variable                                                                                                                   |
+| prompt_format  | New prompts with including ```prompt_string``` variable's value with ```{prompt_string}``` syntax. For example, ```1girl, solo, {prompt_string}```. The ```{prompt_string}``` syntax will be added anywhere in the string. |
+
+- [x] After including the node, change the ```prompt_string``` variable to input
 
 ## Troubleshooting
 
