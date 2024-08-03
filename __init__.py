@@ -19,12 +19,17 @@ if exists(models_folder_path) is False:
 print("/_\ Loading Image Caption")
 from image_caption import ImageCaptionNode
 
+print("/_\ Loading Insert Prompt Node")
+from image_caption import InsertPromptNode
+
 NODE_CLASS_MAPPINGS = {
     "Image Caption Node": ImageCaptionNode,
+    "Insert Prompt Node": InsertPromptNode,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Image Caption Node": "Image Caption Node",
+    "Insert Prompt Node": "Insert Prompt Node",
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

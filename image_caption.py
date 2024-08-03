@@ -21,6 +21,8 @@ from json import load
 
 from preprocess import preprocess
 
+from re import compile
+
 
 def get_torch_dtype():
     dev = get_torch_device()
@@ -55,6 +57,12 @@ def get_model_class(model_path: str):
         )
 
     return model_class
+
+
+def tokenize_text(clip: CLIP, text: str) -> list:
+    tokens = clip.tokenize(text)
+    cond, pooled = clip.encode_from_tokens(tokens, return_pooled=True)
+    return [[cond, {"pooled_output": pooled}]]
 
 
 class ImageCaptionNode:
@@ -102,11 +110,6 @@ class ImageCaptionNode:
     RETURN_NAMES = ("clip_output", "string_output")
     FUNCTION = "image_caption"
     CATEGORY = "image-caption"
-
-    def __tokenize_text(self, clip: CLIP, text: str) -> list:
-        tokens = clip.tokenize(text)
-        cond, pooled = clip.encode_from_tokens(tokens, return_pooled=True)
-        return [[cond, {"pooled_output": pooled}]]
 
     def image_caption(
         self,
@@ -163,7 +166,7 @@ class ImageCaptionNode:
 
         print(print_string)
 
-        return (self.__tokenize_text(clip, output), output)
+        return (tokenize_text(clip, output), output)
 
     @classmethod
     def VALIDATE_INPUTS(s, image):
@@ -171,3 +174,52 @@ class ImageCaptionNode:
             return f"Invalid image file: {image}"
 
         return True
+
+
+class InsertPromptNode:
+    _format_prompt_regex = compile(r"\s*{\s*prompt_string\s*}\s*")
+
+    def __init__(self) -> None:
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "clip": ("CLIP",),
+                "prompt_string": (
+                    "STRING",
+                    {
+                        "default": "",
+                    },
+                ),
+                "prompt_format": (
+                    "STRING",
+                    {
+                        "default": "{prompt_string}",
+                        "multiline": True,
+                    },
+                ),
+            }
+        }
+
+    RETURN_TYPES = (
+        "CONDITIONING",
+        "STRING",
+    )
+    RETURN_NAMES = ("clip_output", "string_output")
+    FUNCTION = "format_prompt"
+    CATEGORY = "image-caption"
+
+    def format_prompt(self, clip: CLIP, prompt_string: str, prompt_format: str):
+        formatted_str = self._format_prompt_regex.sub(prompt_string, prompt_format)
+
+        formatted_str = preprocess(formatted_str)
+
+        print_string = f"{'  INSERT PROMPT NODE OUTPUT  '.center(200, '#')}\n"
+        print_string += f"{formatted_str}\n\n"
+        print_string += f"{'#'*200}\n"
+
+        print(print_string)
+
+        return (tokenize_text(clip, formatted_str), formatted_str)
