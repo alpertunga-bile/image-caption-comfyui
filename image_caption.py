@@ -7,9 +7,9 @@ from folder_paths import (
 from os import listdir
 from os.path import isfile, join, isdir, exists
 from PIL import Image
-from hashlib import sha256
 
 from comfy.model_management import get_torch_device, should_use_fp16, should_use_bf16
+from comfy.sd import CLIP
 
 from torch import bfloat16 as torch_bfloat16
 from torch import float16 as torch_float16
@@ -73,6 +73,7 @@ class ImageCaptionNode:
 
         return {
             "required": {
+                "clip": ("CLIP",),
                 "image": (
                     sorted(image_files),
                     {"image_upload": True},
@@ -86,15 +87,36 @@ class ImageCaptionNode:
                     "INT",
                     {"default": 50, "min": 35, "max": 200, "step": 1},
                 ),
+                "num_beams": ("INT", {"default": 1, "min": 1, "max": 50, "step": 1}),
+                "repetition_penalty": (
+                    "FLOAT",
+                    {"default": 1.0, "min": 1.0, "max": 2.0, "step": 0.1},
+                ),
             },
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = (
+        "CONDITIONING",
+        "STRING",
+    )
+    RETURN_NAMES = ("clip_output", "string_output")
     FUNCTION = "image_caption"
     CATEGORY = "image-caption"
 
+    def __tokenize_text(self, clip: CLIP, text: str) -> list:
+        tokens = clip.tokenize(text)
+        cond, pooled = clip.encode_from_tokens(tokens, return_pooled=True)
+        return [[cond, {"pooled_output": pooled}]]
+
     def image_caption(
-        self, image: str, model_name: str, min_new_tokens: int, max_new_tokens: int
+        self,
+        clip: CLIP,
+        image: str,
+        model_name: str,
+        min_new_tokens: int,
+        max_new_tokens: int,
+        num_beams: int,
+        repetition_penalty: float,
     ) -> str:
         image_path = get_annotated_filepath(image)
         img = Image.open(image_path).convert("RGB")
@@ -119,7 +141,14 @@ class ImageCaptionNode:
         inputs = processor(img, return_tensors="pt").to(dev, torch_dtype)
 
         out = model.generate(
-            **inputs, max_new_tokens=max_new_tokens, min_new_tokens=min_new_tokens
+            **inputs,
+            num_return_sequences=1,
+            max_new_tokens=max_new_tokens,
+            min_new_tokens=min_new_tokens,
+            early_stopping=True,
+            num_beams=num_beams,
+            repetition_penalty=repetition_penalty,
+            remove_invalid_values=True,
         )
 
         output = processor.decode(
@@ -128,9 +157,13 @@ class ImageCaptionNode:
 
         output = preprocess(output)
 
-        print(output)
+        print_string = f"{'  IMAGE CAPTION OUTPUT  '.center(200, '#')}\n"
+        print_string += f"{output}\n\n"
+        print_string += f"{'#'*200}\n"
 
-        return output
+        print(print_string)
+
+        return (self.__tokenize_text(clip, output), output)
 
     @classmethod
     def VALIDATE_INPUTS(s, image):
