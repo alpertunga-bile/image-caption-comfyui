@@ -1,0 +1,14 @@
+[project]
+name = "image-caption-comfyui"
+description = "Image caption node for ComfyUI. You can load your image caption model and generate prompts with the given picture. Insert prompt node is added here to help the users to add their prompts easily."
+version = "1.0.0"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/alpertunga-bile/image-caption-comfyui"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "image-caption-comfyui"
+Icon = ""
