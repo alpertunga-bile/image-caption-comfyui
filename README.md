@@ -9,12 +9,17 @@
     - [Image Caption Node](#image-caption-node)
     - [Insert Prompt Node](#insert-prompt-node)
   - [Troubleshooting](#troubleshooting)
+    - [Package Version](#package-version)
+    - [New Updates On The Node](#new-updates-on-the-node)
   - [Contributing](#contributing)
   - [Example Output](#example-output)
 
 Image caption node for ComfyUI. You can load your image caption model and generate prompts with the given picture.
 
+Insert prompt node is added here to help the users to add their prompts easily.
+
 ## Setup
+
 - Clone the repository to the ```custom_nodes``` folder
 - Run ComfyUI
 - Place the folder which contains your model under the ```models/image_captioners``` folder
@@ -30,6 +35,8 @@ Image caption node for ComfyUI. You can load your image caption model and genera
 
 ![basic_workflow_w_prompt_generator_2](images/basic_workflow_with_prompt_generator_2.png)
 
+- You can find the ```Prompt Generator``` node in [this repository](https://github.com/alpertunga-bile/prompt-generator-comfyui)
+
 ## Pretrained Image Caption Models
 
 - You can find the models in [this link](https://drive.google.com/drive/folders/1c21kMH6FTaia5C8239okL3Q0wJnnWc1N?usp=share_link)
@@ -42,8 +49,8 @@ Image caption node for ComfyUI. You can load your image caption model and genera
 ### Models
 
 - female_image_caption_blip | **(Training In Process)**
-    - Base model
-    - using [Salesforce/blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base)
+  - Base model
+  - using [Salesforce/blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base)
 
 ## Variables
 
@@ -73,6 +80,23 @@ Image caption node for ComfyUI. You can load your image caption model and genera
 
 - If the below solutions are not fixed your issue please create an issue with ```bug``` label
 
+### Package Version
+
+- The image caption node is based on [transformers](https://github.com/huggingface/transformers) package. So most of the problems may be caused from these packages. For overcome these problems you can try to update these packages:
+
+- For Manual Installation of the ComfyUI
+  1. Activate the virtual environment if there is one.
+  2. Run the ```pip install --upgrade transformers``` command.
+
+- For Portable Installation of the ComfyUI
+  1. Go to the ```ComfyUI_windows_portable``` folder.
+  2. Open the command prompt in this folder.
+  3. Run the ```.\python_embeded\python.exe -s -m pip install --upgrade transformers``` command.
+
+### New Updates On The Node
+
+- Sometimes the variables are changed with updates, so it may broke the workflow. But don't worry, you have to just delete the node in the workflow and add it again.
+
 ## Contributing
 
 - Contributions are welcome. If you have an idea and want to implement it by yourself please follow these steps:
@@ -84,7 +108,8 @@ Image caption node for ComfyUI. You can load your image caption model and genera
 
 - [x] The contributing can be done in several ways. You can contribute to code or to README file.
 
-
 ## Example Output
 
-![output_1](images/output_1.png)
+|         Reference (Used) Image         |              Output              |
+| :------------------------------------: | :------------------------------: |
+| ![reference_1](images/reference_1.png) | ![output_1](images/output_1.png) |

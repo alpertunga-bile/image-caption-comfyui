@@ -1,0 +1,17 @@
+[project]
+name = "image-caption-comfyui"
+description = "Using image caption models to extract prompts in ComfyUI"
+version = "1.0.3"
+license = { text = "MIT License" }
+dependencies = [
+  "transformers",
+]
+
+[project.urls]
+Repository = "https://github.com/alpertunga-bile/image-caption-comfyui"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "alpertunga-bile"
+DisplayName = "image-caption-comfyui"
+Icon = ""
