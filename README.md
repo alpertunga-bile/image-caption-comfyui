@@ -66,15 +66,17 @@ Insert prompt node is added here to help the users to add their prompts easily.
 
 - For more information, follow [this link](https://huggingface.co/docs/transformers/v4.31.0/en/main_classes/text_generation#transformers.GenerationConfig).
 - Check [this link](https://huggingface.co/docs/transformers/v4.31.0/en/generation_strategies#text-generation-strategies) for text generation strategies.
+- [x] Increasing the ```min_new_tokens``` and ```max_new_tokens``` variables' values will help to generate more accurate prompts.
 
 ### Insert Prompt Node
 
-| Variable Names | Definitions                                                                                                                                                                                                                |
-| :------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| prompt_string  | Want to be inserted prompt. It is replaced with ```{prompt_string}``` part in the prompt_format variable                                                                                                                   |
-| prompt_format  | New prompts with including ```prompt_string``` variable's value with ```{prompt_string}``` syntax. For example, ```1girl, solo, {prompt_string}```. The ```{prompt_string}``` syntax will be added anywhere in the string. |
+| Variable Names | Definitions                                                                                                                                                                                                                                                                                                                                   |
+| :------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| prompt_string  | Want to be inserted prompt. It is replaced with ```{prompt_string}``` part in the prompt_format variable                                                                                                                                                                                                                                      |
+| prompt_format  | New prompts with including ```prompt_string``` variable's value with ```{prompt_string}``` syntax. For example, ```prompt_string``` value is ```hdr``` and ```prompt_format``` value is ```1girl, solo, {prompt_string}```. Then the output is ```1girl, solo, hdr```. The ```{prompt_string}``` syntax will be added anywhere in the string. |
 
 - [x] After including the node, change the ```prompt_string``` variable to input
+- For string output; additional comma is added for compability with other nodes which are appending new prompts for the given string, for example ```Prompt Generator```.
 
 ## Troubleshooting
 
