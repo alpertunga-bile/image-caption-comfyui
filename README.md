@@ -82,7 +82,7 @@ Insert prompt node is added here to help the users to add their prompts easily.
 
 ### Package Version
 
-- The image caption node is based on [transformers](https://github.com/huggingface/transformers) package. So most of the problems may be caused from these packages. For overcome these problems you can try to update these packages:
+- The image caption node is based on [transformers](https://github.com/huggingface/transformers) package. So most of the problems may be caused from this package. For overcome these problems you can try to update package:
 
 - For Manual Installation of the ComfyUI
   1. Activate the virtual environment if there is one.
@@ -113,3 +113,4 @@ Insert prompt node is added here to help the users to add their prompts easily.
 |         Reference (Used) Image         |              Output              |
 | :------------------------------------: | :------------------------------: |
 | ![reference_1](images/reference_1.png) | ![output_1](images/output_1.png) |
+| ![reference_2](images/reference_2.png) | ![output_2](images/output_2.png) |
