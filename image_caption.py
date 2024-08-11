@@ -65,6 +65,10 @@ def tokenize_text(clip: CLIP, text: str) -> list:
     return [[cond, {"pooled_output": pooled}]]
 
 
+INT_MAX = 0xFFFFFFFFFFFFFFFF
+FLOAT_MAX = 1_000_000.0
+
+
 class ImageCaptionNode:
     def __init__(self) -> None:
         pass
@@ -89,16 +93,19 @@ class ImageCaptionNode:
                 "model_name": (model_dirs,),
                 "min_new_tokens": (
                     "INT",
-                    {"default": 20, "min": 0, "max": 100, "step": 1},
+                    {"default": 20, "min": 0, "max": INT_MAX, "step": 1},
                 ),
                 "max_new_tokens": (
                     "INT",
-                    {"default": 50, "min": 35, "max": 200, "step": 1},
+                    {"default": 50, "min": 35, "max": INT_MAX, "step": 1},
                 ),
-                "num_beams": ("INT", {"default": 1, "min": 1, "max": 50, "step": 1}),
+                "num_beams": (
+                    "INT",
+                    {"default": 1, "min": 1, "max": INT_MAX, "step": 1},
+                ),
                 "repetition_penalty": (
                     "FLOAT",
-                    {"default": 1.0, "min": 1.0, "max": 2.0, "step": 0.1},
+                    {"default": 1.0, "min": 1.0, "max": FLOAT_MAX, "step": 0.1},
                 ),
             },
         }
