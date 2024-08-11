@@ -169,9 +169,13 @@ class ImageCaptionNode:
         return (tokenize_text(clip, output), output)
 
     @classmethod
-    def VALIDATE_INPUTS(s, image):
+    def VALIDATE_INPUTS(s, image: str, model_name: str):
         if not exists_annotated_filepath(image):
             return f"Invalid image file: {image}"
+
+        model_path = join(models_dir, "image_captioners", model_name)
+        if not exists(model_path):
+            return f"{model_path} is not exists"
 
         return True
 
@@ -222,4 +226,4 @@ class InsertPromptNode:
 
         print(print_string)
 
-        return (tokenize_text(clip, formatted_str), formatted_str)
+        return (tokenize_text(clip, formatted_str), formatted_str + ", ")
