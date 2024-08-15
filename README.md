@@ -52,6 +52,10 @@ Insert prompt node is added here to help the users to add their prompts easily.
   - Base model
   - using [Salesforce/blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base)
 
+- female_image_caption_git | **(Training In Process)**
+  - Base model
+  - using [microsoft/git-base](https://huggingface.co/microsoft/git-base)
+
 ## Variables
 
 ### Image Caption Node
