@@ -1,7 +1,7 @@
 [project]
 name = "image-caption-comfyui"
 description = "Using image caption models to extract prompts in ComfyUI"
-version = "1.0.5"
+version = "1.0.6"
 license = { text = "MIT License" }
 dependencies = [
   "transformers",
