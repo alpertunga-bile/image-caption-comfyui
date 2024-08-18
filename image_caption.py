@@ -133,7 +133,7 @@ class ImageCaptionNode:
 
         model_path = join(models_dir, "image_captioners", model_name)
 
-        torch_dtype = get_torch_dtype()
+        req_torch_dtype = get_torch_dtype()
         dev = get_torch_device()
 
         model_class = get_model_class(model_path)
@@ -143,12 +143,12 @@ class ImageCaptionNode:
 
         model = model_class.from_pretrained(
             model_path,
-            torch_dtype=torch_dtype,
+            torch_dtype=req_torch_dtype,
         ).to(dev)
 
         processor = transformers.AutoProcessor.from_pretrained(model_path)
 
-        inputs = processor(img, return_tensors="pt").to(dev, torch_dtype)
+        inputs = processor(images=img, return_tensors="pt").to(dev)
 
         out = model.generate(
             **inputs,
