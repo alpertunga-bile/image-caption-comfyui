@@ -148,7 +148,10 @@ class ImageCaptionNode:
 
         processor = transformers.AutoProcessor.from_pretrained(model_path)
 
-        inputs = processor(images=img, return_tensors="pt").to(dev)
+        try:
+            inputs = processor(images=img, return_tensors="pt").to(dev, req_torch_dtype)
+        except:
+            inputs = processor(images=img, return_tensors="pt").to(dev)
 
         out = model.generate(
             **inputs,
