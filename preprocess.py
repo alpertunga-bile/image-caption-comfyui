@@ -1,38 +1,21 @@
 from re import compile
-from collections import OrderedDict
-
-# compiled regex strings
-
-remove_nonprompts_regex = compile(r"[^a-zA-Z()\[\]{}]*")
-remove_nonweighters_regex = compile(r"[()\[\]{}]*")
-remove_inside_regex = compile(r"[^()\[\]{}]*")
-
-find_empty_parantheses_regex = compile(r"\(\s*\)")
-
-remove_multiwhitespaces_regex = compile(r"\s+")
-remove_nonpromptcommas_regex = compile(r"(,\s){2,}")
-remove_scalarweights_regex = compile(r",\s*:[0-9]*\.?[0-9]+")
-remove_emptyprompts_regex = compile(r",\s+[()\[\]{}]+\s*,")
-remove_danglingparantheses_regex = compile(r"\B\s+|\s+\B")
-
-replace_dict = {
-    compile(r"\(\s*,"): "(",
-    compile(r"\[\s*,"): "[",
-    compile(r"{\s*,"): "{",
-    compile(r",\s*\)"): ")",
-    compile(r",\s*\]"): "]",
-    compile(r",\s*}"): "}",
-}
-
-
-def get_unique_list(sequence: list[str]) -> list[str]:
-    seen = set()
-    return [
-        x.strip() for x in sequence if not (x.strip() in seen or seen.add(x.strip()))
-    ]
+from collections import OrderedDict, namedtuple
 
 
 def remove_exact_keywords(line: str) -> list[str]:
+    find_empty_parantheses_regex = compile(r"\(\s*\)")
+    remove_nonprompts_regex = compile(r"[^a-zA-Z()\[\]{}]*")
+    remove_nonweighters_regex = compile(r"[()\[\]{}]*")
+    remove_inside_regex = compile(r"[^()\[\]{}]*")
+
+    def get_unique_list(sequence: list[str]) -> list[str]:
+        seen = set()
+        return [
+            x.strip()
+            for x in sequence
+            if not (x.strip() in seen or seen.add(x.strip()))
+        ]
+
     # remove exact prompts
     prompts = get_unique_list(line.split(","))
 
@@ -66,13 +49,17 @@ def remove_exact_keywords(line: str) -> list[str]:
                 inner_parant_count = tempPrompt.count("(")
                 outer_parant_count = tempPrompt.count(")")
 
+                """
+                    there is nothing to do
+                    continue with with next prompt
+                """
                 if inner_parant_count == outer_parant_count:
                     continue
 
                 lowest_count = min(inner_parant_count, outer_parant_count)
 
                 # remove balanced parantheses
-                # because it is going to be appended to previous string
+                # because it is going to be appended to a string
                 for _ in range(lowest_count):
                     tempPrompt = tempPrompt.replace("()", "")
 
@@ -90,20 +77,47 @@ def remove_exact_keywords(line: str) -> list[str]:
     return pure_prompts.keys()
 
 
+def fix_commas(string: str) -> str:
+    remove_multiwhitespaces_regex = compile(r"\s+")
+    remove_nonpromptcommas_regex = compile(r"(,\s){2,}")
+
+    temp_str = remove_multiwhitespaces_regex.sub(" ", string)
+    return remove_nonpromptcommas_regex.sub(", ", temp_str)
+
+
+def fix_artifacts(string: str) -> str:
+    temp_string = string
+
+    ArtifactFix = namedtuple("ArtifactFix", ["regex", "new_str"])
+
+    replace_list = [
+        ArtifactFix(regex=compile(r"\(\s*,"), new_str="("),
+        ArtifactFix(regex=compile(r"\[\s*,"), new_str="["),
+        ArtifactFix(regex=compile(r"{\s*,"), new_str="{"),
+        ArtifactFix(regex=compile(r",\s*\)"), new_str=")"),
+        ArtifactFix(regex=compile(r",\s*\]"), new_str="]"),
+        ArtifactFix(regex=compile(r",\s*}"), new_str="}"),
+    ]
+
+    # fixing the artifacts
+    for artifact_fix in replace_list:
+        temp_string = artifact_fix.regex.sub(artifact_fix.new_str, temp_string)
+
+    return temp_string
+
+
 def preprocess(line: str) -> str:
+    remove_scalarweights_regex = compile(r",\s*:[0-9]*\.?[0-9]+")
+    remove_emptyprompts_regex = compile(r",\s+[()\[\]{}]+\s*,")
+    remove_danglingparantheses_regex = compile(r"\B\s+|\s+\B")
 
     temp_line = line.encode("ascii", "xmlcharrefreplace").decode()
     temp_line = temp_line.encode("utf-8", "xmlcharrefreplace").decode()
 
     temp_line = temp_line.replace("\xa0", " ")
     temp_line = temp_line.replace("\n", ", ")
-    temp_line = remove_multiwhitespaces_regex.sub(
-        " ", temp_line
-    )  # from -> ,       ,  , (     prompt) | to -> , , , (prompt)
 
-    temp_line = remove_nonpromptcommas_regex.sub(
-        ", ", temp_line
-    )  # from -> , , , , | to -> ,
+    temp_line = fix_commas(temp_line)
 
     temp_line = remove_scalarweights_regex.sub(
         "", temp_line
@@ -111,17 +125,9 @@ def preprocess(line: str) -> str:
 
     temp_line = ", ".join(remove_exact_keywords(temp_line))
 
-    temp_line = remove_multiwhitespaces_regex.sub(
-        " ", temp_line
-    )  # from -> ,       ,  , (       prompt) | to -> , , , (prompt)
+    temp_line = fix_commas(temp_line)
 
-    temp_line = remove_nonpromptcommas_regex.sub(
-        ", ", temp_line
-    )  # from -> , , , , | to -> ,
-
-    # fixing the artifacts
-    for regex_pattern, new_str in replace_dict.items():
-        temp_line = regex_pattern.sub(new_str, temp_line)
+    temp_line = fix_artifacts(temp_line)
 
     temp_line = remove_emptyprompts_regex.sub(
         ",", temp_line
