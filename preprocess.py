@@ -4,7 +4,7 @@ from collections import OrderedDict, namedtuple
 
 def remove_exact_keywords(line: str) -> list[str]:
     find_empty_parantheses_regex = compile(r"\(\s*\)")
-    remove_nonprompts_regex = compile(r"[^a-zA-Z()\[\]{}]*")
+    remove_nonprompts_regex = compile(r"[^a-zA-Z()_\-\[\]{}]*")
     remove_nonweighters_regex = compile(r"[()\[\]{}]*")
     remove_inside_regex = compile(r"[^()\[\]{}]*")
 
@@ -20,7 +20,7 @@ def remove_exact_keywords(line: str) -> list[str]:
     prompts = get_unique_list(line.split(","))
 
     pure_prompts = OrderedDict()  # order matters, it contains prompts' original forms
-    extracted_pure_prompts = {}  # order isn't important, it contains prompt keywords
+    extracted_pure_prompts = set()  # order isn't important, it contains prompt keywords
 
     # remove exact keyword
     for prompt in prompts:
@@ -28,7 +28,7 @@ def remove_exact_keywords(line: str) -> list[str]:
             "", prompt
         ).lstrip()  # from -> ((masterpiece:1.2)) | to -> ((masterpiece))
 
-        if tempPrompt == "":
+        if len(tempPrompt) == 0:
             continue
 
         tempPrompt = remove_nonweighters_regex.sub(
@@ -42,8 +42,7 @@ def remove_exact_keywords(line: str) -> list[str]:
 
             if (
                 len(find_empty_parantheses_regex.findall(tempPrompt))
-                > 0  # find () count
-                or tempPrompt == ""
+                > 0  # find balanced parantheses count
             ):
                 # check balanced parantheses
                 inner_parant_count = tempPrompt.count("(")
@@ -67,12 +66,8 @@ def remove_exact_keywords(line: str) -> list[str]:
 
             continue
 
-        if tempPrompt == "":
-            tempPrompt = remove_nonprompts_regex.sub("", prompt).lstrip()
-            pure_prompts[tempPrompt] = True
-        else:
-            extracted_pure_prompts[tempPrompt] = True
-            pure_prompts[prompt] = True
+        extracted_pure_prompts.add(tempPrompt)
+        pure_prompts[prompt] = True
 
     return pure_prompts.keys()
 
@@ -126,7 +121,6 @@ def preprocess(line: str) -> str:
     temp_line = ", ".join(remove_exact_keywords(temp_line))
 
     temp_line = fix_commas(temp_line)
-
     temp_line = fix_artifacts(temp_line)
 
     temp_line = remove_emptyprompts_regex.sub(
