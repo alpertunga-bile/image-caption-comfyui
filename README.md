@@ -60,13 +60,15 @@ Insert prompt node is added here to help the users to add their prompts easily.
 
 ### Image Caption Node
 
-|     Variable Names     | Definitions                                                                             |
-| :--------------------: | :-------------------------------------------------------------------------------------- |
-|     **model_name**     | Folder name that contains the model                                                     |
-|   **min_new_tokens**   | The minimum numbers of tokens to generate, ignoring the number of tokens in the prompt. |
-|   **max_new_tokens**   | The maximum numbers of tokens to generate, ignoring the number of tokens in the prompt. |
-|     **num_beams**      | Number of steps for each search path                                                    |
-| **repetition_penalty** | The parameter for repetition penalty. 1.0 means no penalty                              |
+|     Variable Names     | Definitions                                                                                          |
+| :--------------------: | :--------------------------------------------------------------------------------------------------- |
+|     **model_name**     | Folder name that contains the model                                                                  |
+|   **min_new_tokens**   | The minimum numbers of tokens to generate, ignoring the number of tokens in the prompt.              |
+|   **max_new_tokens**   | The maximum numbers of tokens to generate, ignoring the number of tokens in the prompt.              |
+|     **num_beams**      | Number of steps for each search path                                                                 |
+|   **penalty_alpha**    | The values balance the model confidence and the degeneration penalty in contrastive search decoding. |
+|       **top_k**        | The number of highest probability vocabulary tokens to keep for top-k-filtering.                     |
+| **repetition_penalty** | The parameter for repetition penalty. 1.0 means no penalty                                           |
 
 - For more information, follow [this link](https://huggingface.co/docs/transformers/v4.31.0/en/main_classes/text_generation#transformers.GenerationConfig).
 - Check [this link](https://huggingface.co/docs/transformers/v4.31.0/en/generation_strategies#text-generation-strategies) for text generation strategies.
