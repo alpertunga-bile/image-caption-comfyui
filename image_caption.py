@@ -53,7 +53,7 @@ def get_model_class(model_path: str):
         model_class = getattr(transformers, model_class_name)
     except AttributeError:
         raise ValueError(
-            "Given model's architecture is not supported in the transformers"
+            f"Given model's architecture is not supported in the transformers version {transformers.__version__}"
         )
 
     return model_class
@@ -101,8 +101,13 @@ class ImageCaptionNode:
                 ),
                 "num_beams": (
                     "INT",
-                    {"default": 1, "min": 1, "max": INT_MAX, "step": 1},
+                    {"default": 20, "min": 1, "max": INT_MAX, "step": 1},
                 ),
+                "penalty_alpha": (
+                    "FLOAT",
+                    {"default": 0.6, "min": 0.0, "max": FLOAT_MAX, "step": 0.1},
+                ),
+                "top_k": ("INT", {"default": 50, "min": 0, "max": INT_MAX, "step": 1}),
                 "repetition_penalty": (
                     "FLOAT",
                     {"default": 1.0, "min": 1.0, "max": FLOAT_MAX, "step": 0.1},
@@ -126,6 +131,8 @@ class ImageCaptionNode:
         min_new_tokens: int,
         max_new_tokens: int,
         num_beams: int,
+        penalty_alpha: float,
+        top_k: int,
         repetition_penalty: float,
     ) -> str:
         image_path = get_annotated_filepath(image)
@@ -160,8 +167,11 @@ class ImageCaptionNode:
             min_new_tokens=min_new_tokens,
             early_stopping=True,
             num_beams=num_beams,
+            penalty_alpha=penalty_alpha,
+            top_k = top_k,
             repetition_penalty=repetition_penalty,
             remove_invalid_values=True,
+            renormalize_logits=True,
         )
 
         output = processor.decode(
