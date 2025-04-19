@@ -1,26 +1,26 @@
 from re import compile
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
+from functools import lru_cache
+
+
+def get_unique_list(sequence: list[str]) -> list[str]:
+    seen = set()
+    return [
+        x.strip() for x in sequence if not (x.strip() in seen or seen.add(x.strip()))
+    ]
 
 
 def remove_exact_keywords(line: str) -> list[str]:
     find_empty_parantheses_regex = compile(r"\(\s*\)")
-    remove_nonprompts_regex = compile(r"[^a-zA-Z()_\-\[\]{}]*")
+    remove_nonprompts_regex = compile(r"[^a-zA-Z_\-()\[\]{}]*")
     remove_nonweighters_regex = compile(r"[()\[\]{}]*")
     remove_inside_regex = compile(r"[^()\[\]{}]*")
-
-    def get_unique_list(sequence: list[str]) -> list[str]:
-        seen = set()
-        return [
-            x.strip()
-            for x in sequence
-            if not (x.strip() in seen or seen.add(x.strip()))
-        ]
 
     # remove exact prompts
     prompts = get_unique_list(line.split(","))
 
-    pure_prompts = OrderedDict()  # order matters, it contains prompts' original forms
-    extracted_pure_prompts = set()  # order isn't important, it contains prompt keywords
+    pure_prompts = []  # contains prompt values
+    extracted_pure_prompts = set()  # order doesn't matters, it contains prompt keywords
 
     # remove exact keyword
     for prompt in prompts:
@@ -48,28 +48,26 @@ def remove_exact_keywords(line: str) -> list[str]:
                 inner_parant_count = tempPrompt.count("(")
                 outer_parant_count = tempPrompt.count(")")
 
-                """
-                    there is nothing to do
-                    continue with with next prompt
-                """
                 if inner_parant_count == outer_parant_count:
                     continue
 
                 lowest_count = min(inner_parant_count, outer_parant_count)
 
-                # remove balanced parantheses
-                # because it is going to be appended to a string
+                """
+                remove balanced parantheses
+                because it is going to be appended to latter or former prompt
+                """
                 for _ in range(lowest_count):
                     tempPrompt = tempPrompt.replace("()", "")
 
-                pure_prompts[tempPrompt] = True
+                pure_prompts.append(tempPrompt)
 
             continue
 
         extracted_pure_prompts.add(tempPrompt)
-        pure_prompts[prompt] = True
+        pure_prompts.append(prompt)
 
-    return pure_prompts.keys()
+    return pure_prompts
 
 
 def fix_commas(string: str) -> str:
@@ -101,7 +99,8 @@ def fix_artifacts(string: str) -> str:
     return temp_string
 
 
-def preprocess(line: str) -> str:
+@lru_cache
+def preprocess(line: str, preprocess_mode: str) -> str:
     remove_scalarweights_regex = compile(r",\s*:[0-9]*\.?[0-9]+")
     remove_emptyprompts_regex = compile(r",\s+[()\[\]{}]+\s*,")
     remove_danglingparantheses_regex = compile(r"\B\s+|\s+\B")
@@ -118,17 +117,24 @@ def preprocess(line: str) -> str:
         "", temp_line
     )  # from -> , 0.6 | to -> *empty string*
 
-    temp_line = ", ".join(remove_exact_keywords(temp_line))
+    if preprocess_mode == "exact_keyword":
+        temp_line = ", ".join(remove_exact_keywords(temp_line))
 
-    temp_line = fix_commas(temp_line)
-    temp_line = fix_artifacts(temp_line)
+        temp_line = fix_commas(temp_line)
+        temp_line = fix_artifacts(temp_line)
 
-    temp_line = remove_emptyprompts_regex.sub(
-        ",", temp_line
-    )  # from -> , (((, | to -> ,
+        temp_line = remove_emptyprompts_regex.sub(
+            ",", temp_line
+        )  # from -> , (((, | to -> ,
 
-    temp_line = remove_danglingparantheses_regex.sub("", temp_line).replace(
-        ",", ", "
-    )  # from -> (( ((prompt)) | to -> ((prompt))
+        temp_line = remove_danglingparantheses_regex.sub("", temp_line).replace(
+            ",", ", "
+        )  # from -> (( ((prompt)) | to -> ((prompt))
+
+    elif preprocess_mode == "exact_prompt":
+        temp_line = ", ".join(get_unique_list(temp_line.split(",")))
 
     return temp_line
+
+
+__all__ = [preprocess]
