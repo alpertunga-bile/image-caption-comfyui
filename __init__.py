@@ -13,14 +13,14 @@ models_folder_path = join(models_dir, "image_captioners")
 if exists(models_folder_path) is False:
     mkdir(models_folder_path)
     print(
-        f"/_\ {models_folder_path} is created. Please put your model folders under this folder"
+        f"/_\\ {models_folder_path} is created. Please put your model folders under this folder"
     )
 
-print("/_\ Loading Image Caption")
+print("/_\\ Loading Image Caption")
 from image_caption import ImageCaptionNode
 
-print("/_\ Loading Insert Prompt Node")
-from image_caption import InsertPromptNode
+print("/_\\ Loading Insert Prompt Node")
+from insert_prompt import InsertPromptNode
 
 NODE_CLASS_MAPPINGS = {
     "Image Caption Node": ImageCaptionNode,
@@ -34,5 +34,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
 
-print("/_\ Loaded Successfully")
+print("/_\\ Loaded Successfully")
 print("-" * 100)

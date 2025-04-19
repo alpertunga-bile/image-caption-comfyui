@@ -4,66 +4,21 @@ from folder_paths import (
     exists_annotated_filepath,
     models_dir,
 )
+
 from os import listdir
 from os.path import isfile, join, isdir, exists
 from PIL import Image
 
-from comfy.model_management import get_torch_device, should_use_fp16, should_use_bf16
 from comfy.sd import CLIP
-
-from torch import bfloat16 as torch_bfloat16
-from torch import float16 as torch_float16
-from torch import float32 as torch_float32
+from comfy.model_management import get_torch_device, soft_empty_cache
+import gc
 
 import transformers
 
-from json import load
-
 from preprocess import preprocess
+from utility import tokenize_text
 
-from re import compile
-
-
-def get_torch_dtype():
-    dev = get_torch_device()
-
-    if should_use_bf16(device=dev):
-        req_torch_dtype = torch_bfloat16
-    elif should_use_fp16(device=dev):
-        req_torch_dtype = torch_float16
-    else:
-        req_torch_dtype = torch_float32
-
-    return req_torch_dtype
-
-
-def get_model_class(model_path: str):
-    config_filepath = join(model_path, "config.json")
-    if exists(config_filepath) is False:
-        raise ValueError("Config file is not found")
-
-    with open(config_filepath) as json_file:
-        config_file = load(json_file)
-
-    model_class_name = config_file["architectures"][0]
-
-    model_class = None
-
-    try:
-        model_class = getattr(transformers, model_class_name)
-    except AttributeError:
-        raise ValueError(
-            f"Given model's architecture is not supported in the transformers version {transformers.__version__}"
-        )
-
-    return model_class
-
-
-def tokenize_text(clip: CLIP, text: str) -> list:
-    tokens = clip.tokenize(text)
-    cond, pooled = clip.encode_from_tokens(tokens, return_pooled=True)
-    return [[cond, {"pooled_output": pooled}]]
-
+import model_utils
 
 INT_MAX = 0xFFFFFFFFFFFFFFFF
 FLOAT_MAX = 1_000_000.0
@@ -112,6 +67,7 @@ class ImageCaptionNode:
                     "FLOAT",
                     {"default": 1.0, "min": 1.0, "max": FLOAT_MAX, "step": 0.1},
                 ),
+                "preprocess_mode": (["exact_keyword", "exact_prompt", "none"],),
             },
         }
 
@@ -134,31 +90,30 @@ class ImageCaptionNode:
         penalty_alpha: float,
         top_k: int,
         repetition_penalty: float,
+        preprocess_mode: str,
     ) -> str:
         image_path = get_annotated_filepath(image)
         img = Image.open(image_path).convert("RGB")
 
         model_path = join(models_dir, "image_captioners", model_name)
 
-        req_torch_dtype = get_torch_dtype()
         dev = get_torch_device()
 
-        model_class = get_model_class(model_path)
-
-        if model_class is None:
-            raise ValueError("Model type is not recognized")
-
-        model = model_class.from_pretrained(
-            model_path,
-            torch_dtype=req_torch_dtype,
-        ).to(dev)
-
+        model = model_utils.get_model(model_path)
         processor = transformers.AutoProcessor.from_pretrained(model_path)
 
         try:
-            inputs = processor(images=img, return_tensors="pt").to(dev, req_torch_dtype)
+            inputs = processor(
+                images=img,
+                return_tensors="pt",
+                padding=True,
+                use_fast=True,
+            ).to(dev)
         except:
-            inputs = processor(images=img, return_tensors="pt").to(dev)
+            inputs = processor(
+                images=img,
+                return_tensors="pt",
+            ).to(dev)
 
         out = model.generate(
             **inputs,
@@ -168,7 +123,7 @@ class ImageCaptionNode:
             early_stopping=True,
             num_beams=num_beams,
             penalty_alpha=penalty_alpha,
-            top_k = top_k,
+            top_k=top_k,
             repetition_penalty=repetition_penalty,
             remove_invalid_values=True,
             renormalize_logits=True,
@@ -178,11 +133,16 @@ class ImageCaptionNode:
             out[0], skip_special_tokens=True, cleanup_tokenization_spaces=True
         )
 
-        output = preprocess(output)
+        del model
+        del processor
+        soft_empty_cache()
+        gc.collect()
+
+        output = preprocess(output, preprocess_mode)
 
         print_string = f"{'  IMAGE CAPTION OUTPUT  '.center(200, '#')}\n"
         print_string += f"{output}\n\n"
-        print_string += f"{'#'*200}\n"
+        print_string += f"{'#' * 200}\n"
 
         print(print_string)
 
@@ -198,52 +158,3 @@ class ImageCaptionNode:
             return f"{model_path} is not exists"
 
         return True
-
-
-class InsertPromptNode:
-    _format_prompt_regex = compile(r"\s*{\s*prompt_string\s*}\s*")
-
-    def __init__(self) -> None:
-        pass
-
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "clip": ("CLIP",),
-                "prompt_string": (
-                    "STRING",
-                    {
-                        "default": "",
-                    },
-                ),
-                "prompt_format": (
-                    "STRING",
-                    {
-                        "default": "{prompt_string}",
-                        "multiline": True,
-                    },
-                ),
-            }
-        }
-
-    RETURN_TYPES = (
-        "CONDITIONING",
-        "STRING",
-    )
-    RETURN_NAMES = ("clip_output", "string_output")
-    FUNCTION = "format_prompt"
-    CATEGORY = "image-caption"
-
-    def format_prompt(self, clip: CLIP, prompt_string: str, prompt_format: str):
-        formatted_str = self._format_prompt_regex.sub(prompt_string, prompt_format)
-
-        formatted_str = preprocess(formatted_str)
-
-        print_string = f"{'  INSERT PROMPT NODE OUTPUT  '.center(200, '#')}\n"
-        print_string += f"{formatted_str}\n\n"
-        print_string += f"{'#'*200}\n"
-
-        print(print_string)
-
-        return (tokenize_text(clip, formatted_str), formatted_str + ", ")
