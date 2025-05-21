@@ -1,5 +1,8 @@
 # image-caption-comfyui
 
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.comfy.org%2Fnodes%2Fimage-caption-comfyui&query=%24.downloads&suffix=%20Downloads&style=for-the-badge&label=Comfy%20Registry)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.comfy.org%2Fnodes%2Fimage-caption-comfyui&query=%24.latest_version.version&style=for-the-badge&label=Latest%20Version)
+
 - [image-caption-comfyui](#image-caption-comfyui)
   - [Setup](#setup)
   - [Example Workflow](#example-workflow)
